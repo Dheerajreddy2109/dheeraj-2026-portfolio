@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import { RevealLines, RevealWords } from "@/components/ui/reveal";
 import Magnetic from "@/components/ui/magnetic";
@@ -10,7 +11,13 @@ import Marquee from "@/components/ui/marquee";
 import { profile, heroStack } from "@/lib/data";
 import { useLenisScroll } from "@/components/providers/smooth-scroll";
 
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
 export default function Hero() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const scrollCueRef = useRef<HTMLDivElement>(null);
   const { scrollTo } = useLenisScroll();
 
@@ -24,12 +31,25 @@ export default function Hero() {
         ease: "power1.inOut",
         delay: 2.3,
       });
+
+      gsap.to(contentRef.current, {
+        yPercent: -18,
+        opacity: 0.15,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
     },
-    { scope: scrollCueRef }
+    { scope: sectionRef }
   );
 
   return (
     <section
+      ref={sectionRef}
       id="hero"
       className="relative flex min-h-[100svh] flex-col justify-between px-6 pb-8 pt-10 sm:px-10 lg:px-16 lg:pb-10 lg:pt-14"
     >
@@ -48,7 +68,7 @@ export default function Hero() {
         )}
       </div>
 
-      <div className="mt-10 flex-1 sm:mt-16">
+      <div ref={contentRef} className="mt-10 flex-1 sm:mt-16">
         <RevealLines
           as="h1"
           trigger="mount"

@@ -3,9 +3,14 @@
 import { useRef, useState, type MouseEvent } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import SectionHeading from "@/components/ui/section-heading";
 import { projects, type Project } from "@/lib/data";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const GRADIENTS = [
   "from-[#cf4520] to-[#f2a154]",
@@ -43,6 +48,28 @@ export default function Work() {
       yTo.current = gsap.quickTo(previewRef.current, "y", {
         duration: 0.5,
         ease: "power3",
+      });
+
+      const rows = gsap.utils.toArray<HTMLElement>(
+        "[data-project-row]",
+        containerRef.current
+      );
+      rows.forEach((row) => {
+        gsap.fromTo(
+          row,
+          { opacity: 0, y: 36 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: row,
+              start: "top 92%",
+              toggleActions: "play none none reverse",
+            },
+          }
+        );
       });
     },
     { scope: containerRef }
@@ -95,9 +122,10 @@ export default function Work() {
             target="_blank"
             rel="noreferrer"
             data-cursor
+            data-project-row
             onMouseEnter={() => handleEnter(project, i)}
             onMouseLeave={handleLeave}
-            className="group relative grid grid-cols-[2.5rem_1fr] items-center gap-4 border-b border-line py-6 transition-colors duration-300 hover:bg-paper-soft/60 sm:grid-cols-[3rem_1fr_auto_auto] sm:gap-8 sm:px-4 sm:py-8"
+            className="group relative grid grid-cols-[2.5rem_1fr] items-center gap-4 border-b border-line py-6 opacity-0 transition-colors duration-300 hover:bg-paper-soft/60 sm:grid-cols-[3rem_1fr_auto_auto] sm:gap-8 sm:px-4 sm:py-8"
           >
             <span className="font-mono text-xs text-ink-faint">
               {project.index}

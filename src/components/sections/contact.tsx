@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Phone } from "lucide-react";
 import SectionHeading from "@/components/ui/section-heading";
 import { RevealWords } from "@/components/ui/reveal";
 import Magnetic from "@/components/ui/magnetic";
 import { profile } from "@/lib/data";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 function useHyderabadClock() {
   const [time, setTime] = useState<string | null>(null);
@@ -30,30 +37,60 @@ function useHyderabadClock() {
 
 export default function Contact() {
   const time = useHyderabadClock();
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (!wrapRef.current) return;
+      const rows = wrapRef.current.querySelectorAll("[data-contact-row]");
+      gsap.fromTo(
+        rows,
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.15,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: wrapRef.current,
+            start: "top 80%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    },
+    { scope: wrapRef }
+  );
 
   return (
     <section id="contact" className="px-6 py-24 sm:px-10 lg:px-16 lg:py-32">
       <SectionHeading index="06" title="Contact" />
 
-      <div className="flex flex-col gap-12">
+      <div ref={wrapRef} className="flex flex-col gap-12">
         <RevealWords
           as="p"
           text="Have a project that needs to move? I'm currently open to freelance work and full-time roles."
           className="max-w-3xl text-balance font-display text-3xl font-light leading-snug text-ink sm:text-4xl md:text-5xl"
         />
 
-        <Magnetic strength={0.25} className="w-fit">
-          <a
-            data-cursor
-            data-cursor-text="SAY HI"
-            href={`mailto:${profile.email}`}
-            className="group inline-flex max-w-full items-baseline gap-3 break-all border-b-2 border-ink pb-2 font-display text-xl text-ink transition-colors duration-300 hover:border-signal hover:text-signal sm:text-3xl md:text-5xl lg:text-6xl"
-          >
-            {profile.email}
-          </a>
-        </Magnetic>
+        <div data-contact-row className="w-fit opacity-0">
+          <Magnetic strength={0.25}>
+            <a
+              data-cursor
+              data-cursor-text="SAY HI"
+              href={`mailto:${profile.email}`}
+              className="group inline-flex max-w-full items-baseline gap-3 break-all border-b-2 border-ink pb-2 font-display text-xl text-ink transition-colors duration-300 hover:border-signal hover:text-signal sm:text-3xl md:text-5xl lg:text-6xl"
+            >
+              {profile.email}
+            </a>
+          </Magnetic>
+        </div>
 
-        <div className="flex flex-wrap items-center gap-x-10 gap-y-6 font-mono text-xs uppercase tracking-wider text-ink-soft">
+        <div
+          data-contact-row
+          className="flex flex-wrap items-center gap-x-10 gap-y-6 font-mono text-xs uppercase tracking-wider text-ink-soft opacity-0"
+        >
           <a
             href={`tel:${profile.phone.replace(/\s+/g, "")}`}
             className="flex items-center gap-2 transition-colors duration-300 hover:text-signal"

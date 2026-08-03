@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
 import Cursor from "@/components/ui/cursor";
 import Grain from "@/components/ui/grain";
+import ScrollProgress from "@/components/ui/scroll-progress";
 import Preloader from "@/components/preloader";
 import Nav from "@/components/nav";
 
@@ -69,6 +70,7 @@ export default function RootLayout({
             <Preloader />
             <Grain />
             <Cursor />
+            <ScrollProgress />
             <Nav />
             <main className="pt-16 lg:pl-20 lg:pt-0">{children}</main>
           </SmoothScrollProvider>
