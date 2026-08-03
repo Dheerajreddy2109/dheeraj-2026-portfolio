@@ -33,7 +33,7 @@ export const experience = {
   role: "Web Developer",
   org: "Freelance / Independent Projects",
   location: "Hyderabad, India",
-  start: "Jun 2024",
+  start: "Jul 2024",
   end: "Present",
   achievements: [
     "Designed and delivered multiple production web applications — SaaS dashboards, single-page apps, community platforms, and marketing sites — owning everything from UI design through API development and deployment.",
@@ -132,6 +132,7 @@ export const projects: Project[] = [
       "A workdesk-style web app for organising day-to-day work, built end to end and shipped as a containerized deployment.",
     role: "Built the full-stack app in TypeScript React with a Node.js/Express.js API and MySQL, then containerized it with Docker for deployment.",
   },
+
   {
     index: "08",
     name: "WebAnatomy",
