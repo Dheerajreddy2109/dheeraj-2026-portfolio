@@ -46,6 +46,7 @@ export default function Contact() {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [formSent, setFormSent] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
   useGSAP(
@@ -79,20 +80,36 @@ export default function Contact() {
     setTimeout(() => setCopiedEmail(false), 2400);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
 
     sound.playClick();
     setFormLoading(true);
+    setFormError(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setFormError(data.error ?? "Something went wrong. Please try again.");
+      } else {
+        setFormSent(true);
+        sound.playChime();
+        setFormData({ name: "", email: "", message: "" });
+        setTimeout(() => setFormSent(false), 6000);
+      }
+    } catch {
+      setFormError("Network error. Please check your connection and try again.");
+    } finally {
       setFormLoading(false);
-      setFormSent(true);
-      sound.playChime();
-      setFormData({ name: "", email: "", message: "" });
-      setTimeout(() => setFormSent(false), 6000);
-    }, 1000);
+    }
   };
 
   return (
@@ -283,6 +300,11 @@ export default function Contact() {
                 </div>
 
                 <Magnetic strength={0.25} className="w-full pt-2">
+                  {formError && (
+                    <p className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 font-mono text-xs text-red-400">
+                      ⚠ {formError}
+                    </p>
+                  )}
                   <button
                     type="submit"
                     disabled={formLoading}
