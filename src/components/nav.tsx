@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import { Mail, Menu, X, Moon, SunMedium } from "lucide-react";
+import { Mail, Menu, X, Moon, SunMedium, Volume2, VolumeX } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { sections, profile } from "@/lib/data";
 import { useLenisScroll } from "@/components/providers/smooth-scroll";
+import { sound } from "@/lib/sound";
 
 const socials = [
   { icon: null, glyph: "GH", href: profile.github, label: "GitHub" },
@@ -17,12 +18,24 @@ const socials = [
 export default function Nav() {
   const [active, setActive] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { scrollTo, stop, start } = useLenisScroll();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
+  const soundEnabled = useSyncExternalStore(
+    (cb) => {
+      window.addEventListener("portfolio_sound_change", cb);
+      return () => window.removeEventListener("portfolio_sound_change", cb);
+    },
+    () => !sound.muted,
+    () => false
+  );
 
   useEffect(() => {
     const els = Array.from(document.querySelectorAll("section[id]"));
@@ -80,23 +93,35 @@ export default function Nav() {
   );
 
   function goTo(id: string) {
+    sound.playClick();
     setMenuOpen(false);
     scrollTo(`#${id}`);
   }
 
+  function toggleSound() {
+    sound.toggleMute();
+  }
+
+  function toggleThemeMode() {
+    sound.playClick();
+    setTheme(theme === "dark" ? "light" : "dark");
+  }
+
   return (
     <>
-      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-20 flex-col items-center justify-between border-r border-line bg-paper/80 py-8 backdrop-blur-sm lg:flex">
+      {/* Desktop Vertical Nav Rail */}
+      <nav className="fixed left-0 top-0 z-40 hidden h-screen w-20 flex-col items-center justify-between border-r border-line bg-paper/85 py-8 backdrop-blur-md lg:flex">
         <button
           data-cursor
           data-cursor-text="TOP"
           onClick={() => goTo("hero")}
-          className="font-display text-lg italic text-ink"
+          className="font-display text-lg italic text-ink hover:text-signal transition-colors"
           aria-label="Back to top"
         >
           DR
         </button>
 
+        {/* Section Indicators */}
         <ul className="flex flex-col items-center gap-5">
           {sections.map((s) => (
             <li key={s.id} className="group relative">
@@ -109,31 +134,46 @@ export default function Nav() {
                 <span
                   className={`font-mono text-[11px] transition-colors ${
                     active === s.id
-                      ? "text-signal"
+                      ? "text-signal font-bold"
                       : "text-ink-faint group-hover:text-ink"
                   }`}
                 >
                   {s.index}
                 </span>
                 <span
-                  className={`w-px transition-all ${
+                  className={`w-px transition-all duration-300 ${
                     active === s.id
-                      ? "h-5 bg-signal"
-                      : "h-3 bg-line-strong group-hover:bg-ink-soft"
+                      ? "h-6 bg-signal"
+                      : "h-3 bg-line-strong group-hover:bg-ink-soft group-hover:h-4"
                   }`}
                 />
               </button>
-              <span className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-y-1/2 whitespace-nowrap rounded-sm border border-line bg-paper px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-ink opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100">
+              <span className="pointer-events-none absolute left-full top-1/2 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md border border-line bg-paper px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-ink opacity-0 shadow-md transition-opacity duration-200 group-hover:opacity-100">
                 {s.label}
               </span>
             </li>
           ))}
         </ul>
 
+        {/* Action Controls: Sound & Theme & Socials */}
         <div className="flex flex-col items-center gap-5">
+          {/* Sound FX Toggle */}
           <button
             data-cursor
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            data-cursor-text={soundEnabled ? "MUTE" : "AUDIO"}
+            onClick={toggleSound}
+            className={`transition-colors ${
+              soundEnabled ? "text-signal" : "text-ink-soft hover:text-ink"
+            }`}
+            aria-label={soundEnabled ? "Mute audio" : "Enable audio"}
+          >
+            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            data-cursor
+            onClick={toggleThemeMode}
             className="text-ink-soft transition-colors hover:text-signal"
             aria-label="Toggle theme"
           >
@@ -143,7 +183,9 @@ export default function Nav() {
               <Moon size={16} />
             )}
           </button>
-          <div className="flex flex-col items-center gap-4">
+
+          {/* Social Icons */}
+          <div className="flex flex-col items-center gap-4 border-t border-line/60 pt-4">
             {socials.map(({ icon: Icon, glyph, href, label }) => (
               <a
                 key={label}
@@ -168,16 +210,28 @@ export default function Nav() {
         </div>
       </nav>
 
-      <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-line bg-paper/85 px-5 backdrop-blur-sm lg:hidden">
+      {/* Mobile Top Navbar */}
+      <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-line bg-paper/90 px-5 backdrop-blur-md lg:hidden">
         <button
           onClick={() => goTo("hero")}
           className="font-display text-lg italic text-ink"
         >
           Dheeraj Reddy
         </button>
-        <div className="flex items-center gap-5">
+
+        <div className="flex items-center gap-4">
+          {/* Sound Toggle */}
           <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={toggleSound}
+            className={soundEnabled ? "text-signal" : "text-ink-soft"}
+            aria-label={soundEnabled ? "Mute audio" : "Enable audio"}
+          >
+            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleThemeMode}
             className="text-ink-soft"
             aria-label="Toggle theme"
           >
@@ -187,8 +241,13 @@ export default function Nav() {
               <Moon size={18} />
             )}
           </button>
+
+          {/* Hamburger Menu Toggle */}
           <button
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => {
+              sound.playClick();
+              setMenuOpen((v) => !v);
+            }}
             aria-label="Toggle menu"
             className="text-ink"
           >
@@ -197,6 +256,7 @@ export default function Nav() {
         </div>
       </div>
 
+      {/* Mobile Overlay Menu */}
       <div
         ref={menuRef}
         style={{ display: "none" }}
@@ -210,7 +270,7 @@ export default function Nav() {
                 onClick={() => goTo(s.id)}
                 className="flex w-full items-baseline gap-4 border-b border-line py-4 text-left"
               >
-                <span className="font-mono text-xs text-signal">
+                <span className="font-mono text-xs text-signal font-bold">
                   {s.index}
                 </span>
                 <span className="font-display text-3xl text-ink">
@@ -220,7 +280,8 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <div data-menu-item className="flex items-center gap-6">
+
+        <div data-menu-item className="flex items-center gap-6 border-t border-line pt-6">
           {socials.map(({ icon: Icon, glyph, href, label }) => (
             <a
               key={label}
@@ -228,7 +289,7 @@ export default function Nav() {
               target={href.startsWith("http") ? "_blank" : undefined}
               rel="noreferrer"
               aria-label={label}
-              className="text-ink-soft"
+              className="text-ink-soft hover:text-signal transition-colors"
             >
               {Icon ? (
                 <Icon size={20} />

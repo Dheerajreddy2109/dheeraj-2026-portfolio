@@ -6,6 +6,7 @@ import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
 import Cursor from "@/components/ui/cursor";
 import Grain from "@/components/ui/grain";
 import ScrollProgress from "@/components/ui/scroll-progress";
+import ParticleCanvas from "@/components/ui/particle-canvas";
 import Preloader from "@/components/preloader";
 import Nav from "@/components/nav";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SmoothScrollProvider>
             <Preloader />
+            <ParticleCanvas />
             <Grain />
             <Cursor />
             <ScrollProgress />
