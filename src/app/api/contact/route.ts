@@ -18,17 +18,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+
+    if (!gmailUser || !gmailPass) {
+      console.error("[contact/route] Missing GMAIL_USER or GMAIL_APP_PASSWORD env vars");
+      return NextResponse.json(
+        { error: "Server misconfiguration. Please contact me directly via email." },
+        { status: 500 }
+      );
+    }
+
+    // Use explicit host/port instead of service:"gmail" for Vercel compatibility
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // SSL
       auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: gmailUser,
+        pass: gmailPass.replace(/\s+/g, ""), // strip any spaces from app password
       },
     });
 
     await transporter.sendMail({
-      from: `"Portfolio Contact" <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER, // sends to yourself
+      from: `"Portfolio Contact" <${gmailUser}>`,
+      to: gmailUser,
       replyTo: email.trim(),
       subject: `[Portfolio] New message from ${name.trim()}`,
       html: `
